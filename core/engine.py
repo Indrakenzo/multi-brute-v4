@@ -1,19 +1,17 @@
-import asyncio
 import httpx
-from .proxy_mgr import ProxyManager
+import asyncio
 
 class JarvisEngine:
-    def __init__(self, proxy_list):
-        self.pm = ProxyManager(proxy_list)
+    def __init__(self, proxy_mgr):
+        self.proxy_mgr = proxy_mgr
 
-    async def send_request(self, target_url, payload, headers):
-        proxy = self.pm.get_proxy()
-        async with httpx.AsyncClient(proxies=proxy, verify=False, http2=True) as client:
+    async def execute_audit(self, url, payload, headers):
+        proxy = self.proxy_mgr.get_proxy()
+        self.proxy_mgr.increment()
+        
+        async with httpx.AsyncClient(proxies=proxy, http2=True, timeout=15) as client:
             try:
-                response = await client.post(target_url, data=payload, headers=headers)
-                self.pm.mark_attempt() # Hitung attempt untuk rotasi IP
+                response = await client.post(url, data=payload, headers=headers)
                 return response
             except Exception as e:
-                print(f"[ERROR] Connection Failed: {e}")
-                self.pm.mark_attempt()
                 return None
