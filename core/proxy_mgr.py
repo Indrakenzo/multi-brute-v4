@@ -1,21 +1,19 @@
-import httpx
-import random
-
 class ProxyManager:
     def __init__(self, proxy_list):
         self.proxies = proxy_list
-        self.current_index = 0
-        self.attempts = 0
+        self.index = 0
+        self.hit_count = 0
 
     def get_proxy(self):
-        # Logika Otomatis Ganti tiap 3 percobaan
-        if self.attempts >= 3:
-            self.current_index = (self.current_index + 1) % len(self.proxies)
-            self.attempts = 0
-            print(f"[!] SYSTEM: Rotating IP to -> {self.proxies[self.current_index]}")
+        if not self.proxies: return None
         
-        proxy_url = self.proxies[self.current_index]
-        return {"http://": proxy_url, "https://": proxy_url}
+        # Rotasi otomatis setiap 3 kali percobaan
+        if self.hit_count >= 3:
+            self.index = (self.index + 1) % len(self.proxies)
+            self.hit_count = 0
+            print(f"\n[!] SYSTEM: Rotasi IP ke -> {self.proxies[self.index]}")
+            
+        return {"http://": self.proxies[self.index], "https://": self.proxies[self.index]}
 
-    def mark_attempt(self):
-        self.attempts += 1
+    def increment(self):
+        self.hit_count += 1
